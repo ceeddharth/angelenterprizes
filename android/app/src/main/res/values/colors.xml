@@ -1,0 +1,11 @@
+<resources>
+    <!-- Construction Architectural Palette -->
+    <color name="safety_amber_primary">#D97706</color>
+    <color name="safety_amber_dark">#B45309</color>
+    <color name="construction_slate">#1E293B</color>
+    <color name="construction_steel">#334155</color>
+    <color name="concrete_bg">#F8FAFC</color>
+    <color name="status_active">#15803D</color>
+    <color name="status_pending">#B45309</color>
+    <color name="status_suspended">#DC2626</color>
+</resources>

@@ -1,0 +1,65 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules
+// Civil Workforce Attendance System — ANGEL ENTERPRISES
+// Enforces strict role-based access control (RBAC), MIME-type integrity, and size limits.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function: Check if caller is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper function: Check if caller is verified administrator
+    function isAdmin() {
+      return isSignedIn() &&
+        firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid));
+    }
+
+    // Helper function: Validate image file constraints
+    function isValidImage() {
+      return request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+
+    // 1. Default Catch-All: Block all unhandled paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Construction Site Photos (/sitePhotos/{siteId}/{photoId})
+    // - Management restricted strictly to authorized Admin users
+    // - Read permitted for authenticated system users (Admins / assigned site personnel)
+    // - Strict image content type and 5MB size limit enforced on upload
+    match /sitePhotos/{siteId}/{photoId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() && (request.method == 'delete' || isValidImage());
+    }
+
+    // 3. Worker Profile Photos (/workerPhotos/{workerId}/{photoId})
+    // - Maximum privacy: Workers can only read and write their own profile photo
+    // - Admins can read and manage worker photos under Admin RBAC
+    // - Strict prevention of cross-worker data leaks or tampering
+    match /workerPhotos/{workerId}/{photoId} {
+      allow read: if isSignedIn() && (
+        isAdmin() ||
+        firestore.get(/databases/(default)/documents/workers/$(workerId)).data.uid == request.auth.uid ||
+        firestore.get(/databases/(default)/documents/workers/$(workerId)).data.userId == request.auth.uid
+      );
+      allow write: if isSignedIn() && (
+        isAdmin() ||
+        firestore.get(/databases/(default)/documents/workers/$(workerId)).data.uid == request.auth.uid ||
+        firestore.get(/databases/(default)/documents/workers/$(workerId)).data.userId == request.auth.uid
+      ) && (request.method == 'delete' || isValidImage());
+    }
+
+    // 4. Official Branding Assets (/branding/{assetName})
+    // - Read permitted for authenticated application clients
+    // - Write restricted strictly to administrator
+    match /branding/{assetName} {
+      allow read: if true;
+      allow write: if isAdmin() && (request.method == 'delete' || isValidImage());
+    }
+  }
+}

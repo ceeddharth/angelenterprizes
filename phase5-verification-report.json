@@ -1,0 +1,151 @@
+{
+  "results": [
+    {
+      "num": 1,
+      "name": "Worker Leave: View Balance & History",
+      "status": "PASS",
+      "evidence": "HTTP 200. Balance: Casual=12, Medical=15. Requests count: 0"
+    },
+    {
+      "num": 2,
+      "name": "Worker Leave: Submit Valid Leave Request",
+      "status": "PASS",
+      "evidence": "HTTP 200. Request ID: LV-1790514823671-523, Status: PENDING, Days: 3"
+    },
+    {
+      "num": 3,
+      "name": "Worker Leave: Rejection on Invalid Date Range",
+      "status": "PASS",
+      "evidence": "HTTP 400: \"End date cannot precede start date.\""
+    },
+    {
+      "num": 4,
+      "name": "Worker Leave: Rejection on Empty Reason",
+      "status": "PASS",
+      "evidence": "HTTP 400: \"A valid reason is required for leave request.\""
+    },
+    {
+      "num": 5,
+      "name": "Worker Leave: Overlapping Pending Request Protection",
+      "status": "PASS",
+      "evidence": "HTTP 400: \"Worker W-1002 already has an overlapping pending or approved leave request (2026-10-05 to 2026-10-07).\""
+    },
+    {
+      "num": 6,
+      "name": "Worker Leave: Privacy & IDOR Protection",
+      "status": "PASS",
+      "evidence": "HTTP 403: \"Access denied: Workers can only view their own leave records.\""
+    },
+    {
+      "num": 7,
+      "name": "Admin Leave: View All Workforce Requests",
+      "status": "PASS",
+      "evidence": "HTTP 200. Retrieved 1 requests. Found test request LV-1790514823671-523"
+    },
+    {
+      "num": 8,
+      "name": "Admin Leave: Approve Leave Request",
+      "status": "PASS",
+      "evidence": "HTTP 200. Firestore doc status: APPROVED, approvedBy: J4txrsdJdhZYV073JwZML9npBcy1"
+    },
+    {
+      "num": 9,
+      "name": "Admin Leave: Reject Leave Request with Reason",
+      "status": "PASS",
+      "evidence": "HTTP 200. Firestore doc status: REJECTED, rejectionReason: \"Critical concrete casting scheduled on these dates\""
+    },
+    {
+      "num": 10,
+      "name": "RBAC: Worker Cannot Review Leave Requests",
+      "status": "PASS",
+      "evidence": "HTTP 403: \"Unauthorized: Only administrators can approve or reject leave requests.\""
+    },
+    {
+      "num": 11,
+      "name": "Worker Overtime: Submit Valid Overtime Log",
+      "status": "PASS",
+      "evidence": "HTTP 200. Overtime ID: OT-1790514825836-313, Hours: 3.5, Status: PENDING"
+    },
+    {
+      "num": 12,
+      "name": "Worker Overtime: Rejection on Zero/Negative Hours",
+      "status": "PASS",
+      "evidence": "HTTP 400: \"Overtime hours must be a positive number between 0.5 and 16.\""
+    },
+    {
+      "num": 13,
+      "name": "Worker Overtime: Rejection on Invalid Site",
+      "status": "PASS",
+      "evidence": "HTTP 400: \"Site does not exist or is inactive (SITE-NONEXISTENT-999).\""
+    },
+    {
+      "num": 14,
+      "name": "Worker Overtime: Rejection on Empty Description",
+      "status": "PASS",
+      "evidence": "HTTP 400: \"A non-empty task description is required for overtime.\""
+    },
+    {
+      "num": 15,
+      "name": "Worker Overtime: Privacy & IDOR Protection",
+      "status": "PASS",
+      "evidence": "HTTP 403: \"Access denied: Workers can only view their own overtime records.\""
+    },
+    {
+      "num": 16,
+      "name": "Admin Overtime: View All Workforce Records",
+      "status": "PASS",
+      "evidence": "HTTP 200. Retrieved 1 records. Includes test overtime OT-1790514825836-313"
+    },
+    {
+      "num": 17,
+      "name": "Admin Overtime: Approve Overtime Record",
+      "status": "PASS",
+      "evidence": "HTTP 200. Firestore doc status: APPROVED, approvedHours: 3.5"
+    },
+    {
+      "num": 18,
+      "name": "Admin Overtime: Reject Overtime Record",
+      "status": "PASS",
+      "evidence": "HTTP 200. Firestore doc status: REJECTED, rejectionReason: \"Work was performed outside safety lighting protocols\""
+    },
+    {
+      "num": 19,
+      "name": "RBAC: Worker Cannot Review Overtime Records",
+      "status": "PASS",
+      "evidence": "HTTP 403: \"Access denied: Active Administrator role required.\""
+    },
+    {
+      "num": 20,
+      "name": "Admin Salary: Deterministic Calculation Model",
+      "status": "PASS",
+      "evidence": "HTTP 200. Slip ID: SAL-W-1002-2026-09, Days: 4, OT Hours: 3.5, Base: $1200, OT: $196.88, Net: $1496.88"
+    },
+    {
+      "num": 21,
+      "name": "Admin Salary: Rejection on Non-Existent Worker",
+      "status": "PASS",
+      "evidence": "HTTP 404: \"Worker W-NONEXISTENT-999 does not exist.\""
+    },
+    {
+      "num": 22,
+      "name": "Admin Salary: Status Lifecycle (PROCESSED -> PAID)",
+      "status": "PASS",
+      "evidence": "Process HTTP 200, Paid HTTP 200. Final Firestore status: PAID, disbursedAt: 2026-09-27T13:13:48.877Z"
+    },
+    {
+      "num": 23,
+      "name": "Worker Salary: Privacy & IDOR Protection",
+      "status": "PASS",
+      "evidence": "Own Slips: HTTP 200 (Count: 1). Other Worker Slips: HTTP 403 (\"Access denied: Workers can only view their own salary slips.\")"
+    },
+    {
+      "num": 24,
+      "name": "Security & Clean Teardown Verification",
+      "status": "PASS",
+      "evidence": "Zero passwords/PINs found. Successfully pruned 2 test leave records, 2 test overtime records, and 1 test salary records from Firestore."
+    }
+  ],
+  "passCount": 24,
+  "total": 24,
+  "timestamp": "2026-09-27T13:13:51.067Z"
+}

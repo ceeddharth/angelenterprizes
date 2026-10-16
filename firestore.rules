@@ -1,0 +1,291 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Dynamic Admin/Supervisor role check from Firestore user document + designated admin email
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'admin@civilworkforce.gov' ||
+        request.auth.token.email == 'aartichavan8781@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'SITE_SUPERVISOR') &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'ACTIVE')
+      );
+    }
+
+    // Strict Admin check (excludes SITE_SUPERVISOR) for privileged user management and role assignment
+    function isStrictAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'admin@civilworkforce.gov' ||
+        request.auth.token.email == 'aartichavan8781@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'ACTIVE')
+      );
+    }
+
+    // Helper function to calculate India Standard Time (IST = UTC + 5h 30m) date string (YYYY-MM-DD)
+    // from server request.time. This prevents client device clock manipulation for attendance dates.
+    function getIndiaDate(ts) {
+      let ist = ts + duration.value(5, 'h') + duration.value(30, 'm');
+      return string(ist.year()) + '-' +
+        (ist.month() < 10 ? '0' : '') + string(ist.month()) + '-' +
+        (ist.day() < 10 ? '0' : '') + string(ist.day());
+    }
+
+    // 1. Users collection
+    // - Authenticated user can read their OWN profile without invoking isAdmin()
+    // - Admin can read any user document
+    // - Only strict ADMIN can modify user roles, statuses, or delete user records
+    // - User creation requires owner UID match and prevents creating unauthorized ADMIN accounts
+    // - Non-admin owners can update non-privileged fields on their OWN document, but CANNOT
+    //   change role, status, uid, or email.
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if (isStrictAdmin() || isOwner(userId)) &&
+        (isStrictAdmin() || (
+          // Regular users registering can only create WORKER role with PENDING or ACTIVE status
+          request.resource.data.role == 'WORKER' &&
+          request.resource.data.uid == userId &&
+          (request.resource.data.status == 'PENDING' || request.resource.data.status == 'ACTIVE')
+        ) || (
+          // Bootstrap admin creation by designated admin email
+          request.resource.data.role == 'ADMIN' &&
+          request.resource.data.uid == userId &&
+          (request.auth.token.email == 'admin@civilworkforce.gov' || request.auth.token.email.matches('^admin@.*'))
+        ));
+      allow update: if isStrictAdmin() || (
+        isOwner(userId) &&
+        request.resource.data.role == resource.data.role &&
+        request.resource.data.status == resource.data.status &&
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.email == resource.data.email
+      );
+      allow delete: if isStrictAdmin();
+    }
+
+    // 2. Workers collection
+    // - Admin can query and manage all workers
+    // - Worker can read only their own worker document (matched by uid or userId)
+    match /workers/{workerId} {
+      allow read: if isAdmin() || (isSignedIn() && (resource.data.uid == request.auth.uid || resource.data.userId == request.auth.uid));
+      allow write: if isAdmin();
+    }
+
+    // 3. Construction Sites collection
+    // - Public/applicants and authenticated users can view active sites
+    // - Admin can create and update sites
+    match /sites/{siteId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      // Construction Site Photos subcollection (1–5 photos per site)
+      // - Authenticated users and admins can view site photo metadata
+      // - Admin only can add, edit, or delete site photos
+      match /photos/{photoId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
+      }
+    }
+
+    // 4. Worker Registrations collection
+    // - Newly registered authenticated worker can create only their registration record with PENDING status
+    // - Workers cannot assign themselves a Worker ID (assignedWorkerId must be absent or null)
+    // - Applicants can read their submitted registration to check status
+    // - Admin can read all registrations and approve, reject, or manage them
+    match /workerRegistrations/{regId} {
+      allow create: if isSignedIn() && request.resource.data.status == 'PENDING'
+        && (!('assignedWorkerId' in request.resource.data) || request.resource.data.assignedWorkerId == null);
+      allow read: if isAdmin() || (isSignedIn() && resource.data.submittedData.email == request.auth.token.email);
+      allow update, delete: if isAdmin();
+    }
+
+    // 5. Workforce Batches collection
+    // - Admin can read, create, update, and deactivate batches
+    // - Authenticated users and prospective applicants can read ACTIVE batches for registration dropdown selection
+    // - Non-admins have ZERO write access (cannot create, edit, or delete batches)
+    match /batches/{batchId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.status == 'ACTIVE') || resource.data.status == 'ACTIVE';
+      allow write: if isAdmin();
+    }
+
+    // 6. Concurrency-Safe System Counters collection
+    // - Used for atomic sequential Worker ID (W-1001, W-1002...) and Batch ID (B-01, B-02...) allocation
+    // - Read permitted for authenticated users
+    // - Write strictly restricted to active ADMIN
+    match /counters/{counterId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // 7. Active QR Sessions collection
+    // - Admin can read the active session to display or monitor it
+    // - Workers have ZERO read permission
+    // - Clients can NEVER write (allow write: if false;). Only trusted server using Firebase Admin credentials can write.
+    match /activeQrSessions/{siteId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // 6. Attendance collection
+    // - Workers can only read their own records (matched by workerUid); Admins can read all records
+    match /attendance/{attendanceId} {
+      allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.workerUid == request.auth.uid));
+
+      // Check-In Creation:
+      allow create: if isSignedIn()
+        // 1. Worker Identity: Authenticated user must own the record
+        && request.resource.data.workerUid == request.auth.uid
+        // 2. Active Worker Check: Worker must exist, have ACTIVE status, and match caller UID
+        && exists(/databases/$(database)/documents/workers/$(request.resource.data.workerId))
+        && get(/databases/$(database)/documents/workers/$(request.resource.data.workerId)).data.status == 'ACTIVE'
+        && get(/databases/$(database)/documents/workers/$(request.resource.data.workerId)).data.uid == request.auth.uid
+        // 3. Site Assignment Check: Worker must be assigned to this site
+        && (
+          ('siteId' in get(/databases/$(database)/documents/workers/$(request.resource.data.workerId)).data &&
+           get(/databases/$(database)/documents/workers/$(request.resource.data.workerId)).data.siteId == request.resource.data.siteId) ||
+          ('assignedSiteId' in get(/databases/$(database)/documents/workers/$(request.resource.data.workerId)).data &&
+           get(/databases/$(database)/documents/workers/$(request.resource.data.workerId)).data.assignedSiteId == request.resource.data.siteId)
+        )
+        // 4. Deterministic ID & Date Enforcement:
+        // Date must strictly match the server's India Standard Time (IST = UTC + 5h30m) date,
+        // preventing workers from creating attendance for past/future dates by changing device clocks.
+        // Document ID must strictly be workerId_date.
+        && request.resource.data.date == getIndiaDate(request.time)
+        && attendanceId == request.resource.data.workerId + '_' + request.resource.data.date
+        // 5. Server Timestamp Enforcement (Client clock ignored)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.checkInTime == request.time
+        && request.resource.data.checkOutTime == null
+        && request.resource.data.status == 'CHECKED_IN'
+        // 6. Active Rotating QR Token Validation
+        // Note: qrTokenHash stores the server-generated HMAC-SHA256 digest of siteId:timeSlot for the 30s window.
+        // Direct comparison against the active session token validates that the worker scanned the live kiosk QR.
+        && exists(/databases/$(database)/documents/activeQrSessions/$(request.resource.data.siteId))
+        && request.time <= get(/databases/$(database)/documents/activeQrSessions/$(request.resource.data.siteId)).data.expiresAt
+        && request.resource.data.qrTokenHash == get(/databases/$(database)/documents/activeQrSessions/$(request.resource.data.siteId)).data.token;
+
+      // Check-Out Update:
+      allow update: if isAdmin() || (
+        isSignedIn()
+        // 1. Ownership & Immutability: Prevent altering workerId, workerUid, siteId, date, checkInTime, createdAt
+        && resource.data.workerUid == request.auth.uid
+        && request.resource.data.workerId == resource.data.workerId
+        && request.resource.data.workerUid == resource.data.workerUid
+        && request.resource.data.siteId == resource.data.siteId
+        && request.resource.data.date == resource.data.date
+        && request.resource.data.checkInTime == resource.data.checkInTime
+        && request.resource.data.createdAt == resource.data.createdAt
+        // 2. State Transition: Must currently be CHECKED_IN and not already checked out
+        && resource.data.status == 'CHECKED_IN'
+        && resource.data.checkOutTime == null
+        // 3. Check-Out Timestamp & Final Status
+        && request.resource.data.checkOutTime == request.time
+        && request.resource.data.status == 'COMPLETED'
+        && request.resource.data.updatedAt == request.time
+        // 4. Valid QR Token Presented at Check-Out
+        // Note: qrTokenHash stores the server-generated HMAC-SHA256 digest of siteId:timeSlot for the 30s window.
+        && exists(/databases/$(database)/documents/activeQrSessions/$(request.resource.data.siteId))
+        && request.time <= get(/databases/$(database)/documents/activeQrSessions/$(request.resource.data.siteId)).data.expiresAt
+        && request.resource.data.qrTokenHash == get(/databases/$(database)/documents/activeQrSessions/$(request.resource.data.siteId)).data.token
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // 6. Idempotency records collection
+    // Written exclusively by backend server via Admin SDK.
+    // Read allowed only for the operation owner or admin.
+    match /idempotentOperations/{operationId} {
+      allow read: if isSignedIn() && (resource.data.workerUid == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // 7. Phase 5: Leave Requests collection
+    // - Workers can view only their own leave requests
+    // - Admins can view and manage all leave requests
+    // - Workers can submit only their own requests with PENDING status
+    // - Workers can cancel only their own PENDING requests; cannot approve or reject
+    // - Admins can approve or reject any leave request
+    match /leaveRequests/{leaveId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.workerUid == request.auth.uid);
+      allow create: if isAdmin() || (
+        isSignedIn()
+        && request.resource.data.workerUid == request.auth.uid
+        && request.resource.data.status == 'PENDING'
+        && request.resource.data.startDate is string
+        && request.resource.data.endDate is string
+      );
+      allow update: if isAdmin() || (
+        isSignedIn()
+        && resource.data.workerUid == request.auth.uid
+        && resource.data.status == 'PENDING'
+        && request.resource.data.status == 'CANCELLED'
+        && request.resource.data.workerUid == resource.data.workerUid
+        && request.resource.data.workerId == resource.data.workerId
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 8. Phase 5: Overtime Records collection
+    // - Workers can read only their own overtime logs
+    // - Admins can read, create, update, and manage all overtime records
+    // - Workers can submit overtime claim with PENDING status and positive hours
+    // - Workers cannot self-approve overtime records
+    match /overtimeRecords/{overtimeId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.workerUid == request.auth.uid);
+      allow create: if isAdmin() || (
+        isSignedIn()
+        && request.resource.data.workerUid == request.auth.uid
+        && request.resource.data.status == 'PENDING'
+        && request.resource.data.hours is number
+        && request.resource.data.hours > 0
+      );
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // 9. Phase 5: Salary Records collection
+    // - Workers can read only their own salary records
+    // - Admins have full read, create, update, and delete permissions
+    // - Non-admins have ZERO write access (immutable pay slips)
+    match /salaryRecords/{salaryId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.workerUid == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // 10. Phase 6: Report Audit Logs collection
+    // - Only Admins can read and write report audit logs
+    match /reportAuditLogs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 11. Phase 7: Security Events collection
+    // - Immutable server-authoritative audit log of security events
+    // - Only Admins can read security events
+    // - Clients have ZERO direct write access (write: if false;)
+    // - All writes occur strictly server-side via Firebase Admin SDK
+    match /securityEvents/{eventId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // 12. Device Tokens collection for worker push notifications
+    // - Authenticated users can manage their own device registration tokens
+    // - Admins can read and manage device tokens
+    match /deviceTokens/{tokenId} {
+      allow read, delete: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow create, update: if isAdmin() || (isSignedIn() && request.resource.data.uid == request.auth.uid);
+    }
+  }
+}

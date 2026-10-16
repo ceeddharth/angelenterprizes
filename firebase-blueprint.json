@@ -1,0 +1,298 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "System user account with role-based access control.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email", "description": "User email address" },
+        "role": { "type": "string", "enum": ["ADMIN", "WORKER"], "description": "Access level role" },
+        "status": { "type": "string", "enum": ["ACTIVE", "PENDING", "SUSPENDED"], "description": "Account status" },
+        "workerId": { "type": "string", "description": "Associated worker ID if role is WORKER" },
+        "fullName": { "type": "string", "description": "Display name of user" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of creation" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+      },
+      "required": ["uid", "email", "role", "status", "createdAt"]
+    },
+    "worker": {
+      "title": "Worker",
+      "description": "Construction workforce profile and deployment details.",
+      "type": "object",
+      "properties": {
+        "workerId": { "type": "string", "description": "Unique worker identifier (e.g. W-1001)" },
+        "uid": { "type": "string", "description": "Linked Firebase Auth UID" },
+        "fullName": { "type": "string", "description": "Worker legal full name" },
+        "phone": { "type": "string", "description": "Contact mobile number" },
+        "email": { "type": "string", "format": "email", "description": "Worker contact email" },
+        "batchNumber": { "type": "string", "description": "Assigned cohort or batch" },
+        "jobRole": { "type": "string", "description": "Trade specialization or job title" },
+        "siteId": { "type": "string", "description": "Assigned construction site identifier" },
+        "dateOfBirth": { "type": "string", "description": "Worker date of birth" },
+        "address": { "type": "string", "description": "Residential address or site quarters" },
+        "emergencyContactName": { "type": "string", "description": "Name of emergency contact" },
+        "emergencyContactPhone": { "type": "string", "description": "Phone number of emergency contact" },
+        "joiningDate": { "type": "string", "description": "Date worker joined the project" },
+        "status": { "type": "string", "enum": ["ACTIVE", "PENDING", "SUSPENDED"], "description": "Employment active status" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of registration" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last modification" }
+      },
+      "required": ["workerId", "fullName", "phone", "jobRole", "siteId", "status", "createdAt"]
+    },
+    "site": {
+      "title": "Construction Site",
+      "description": "Active infrastructure project site location.",
+      "type": "object",
+      "properties": {
+        "siteId": { "type": "string", "description": "Unique site code (e.g. SITE-101)" },
+        "siteName": { "type": "string", "description": "Civil project site name" },
+        "projectName": { "type": "string", "description": "Parent civil infrastructure program" },
+        "address": { "type": "string", "description": "Physical site address or GPS zone" },
+        "description": { "type": "string", "description": "Site operational scope and engineering scope" },
+        "status": { "type": "string", "enum": ["ACTIVE", "INACTIVE"], "description": "Operational site status" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of site establishment" }
+      },
+      "required": ["siteId", "siteName", "status", "createdAt"]
+    },
+    "workerRegistration": {
+      "title": "Worker Registration Submission",
+      "description": "Prospective worker onboarding application undergoing supervisor review.",
+      "type": "object",
+      "properties": {
+        "registrationId": { "type": "string", "description": "Unique registration ticket code" },
+        "workerId": { "type": "string", "description": "Applicant requested worker ID" },
+        "submittedData": { "type": "object", "description": "Full serialized submission form data" },
+        "status": { "type": "string", "enum": ["PENDING", "ACTIVE", "APPROVED", "REJECTED"], "description": "Review status" },
+        "rejectionReason": { "type": "string", "description": "Admin rationale when an application is rejected" },
+        "submittedAt": { "type": "string", "description": "ISO timestamp of submission" },
+        "reviewedAt": { "type": "string", "description": "ISO timestamp when reviewed by admin" },
+        "reviewedBy": { "type": "string", "description": "Admin UID or email who reviewed" }
+      },
+      "required": ["registrationId", "workerId", "submittedData", "status", "submittedAt"]
+    },
+    "batch": {
+      "title": "Workforce Batch",
+      "description": "Admin-managed workforce cohort (e.g. B-01, B-02).",
+      "type": "object",
+      "properties": {
+        "batchId": { "type": "string", "description": "Sequential batch code (e.g. B-01, B-02)" },
+        "name": { "type": "string", "description": "Batch trade or cohort name" },
+        "description": { "type": "string", "description": "Batch operational description" },
+        "status": { "type": "string", "enum": ["ACTIVE", "INACTIVE"], "description": "Batch operational status" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of creation" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+      },
+      "required": ["batchId", "name", "status", "createdAt"]
+    },
+    "leaveRequest": {
+      "title": "Leave Request",
+      "description": "Worker leave submission and supervisor approval record.",
+      "type": "object",
+      "properties": {
+        "leaveId": { "type": "string", "description": "Unique leave request ID" },
+        "workerId": { "type": "string", "description": "Assigned worker ID (e.g. W-1001)" },
+        "workerUid": { "type": "string", "description": "Firebase Auth UID of worker" },
+        "workerName": { "type": "string", "description": "Full name of worker" },
+        "leaveType": { "type": "string", "enum": ["CASUAL", "SICK", "EMERGENCY", "PAID", "UNPAID"] },
+        "startDate": { "type": "string", "description": "Start date of leave (YYYY-MM-DD)" },
+        "endDate": { "type": "string", "description": "End date of leave (YYYY-MM-DD)" },
+        "daysCount": { "type": "number", "description": "Number of days requested" },
+        "reason": { "type": "string", "description": "Justification for leave" },
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "REJECTED", "CANCELLED"] },
+        "submittedAt": { "type": "string", "description": "ISO timestamp of submission" },
+        "reviewedAt": { "type": "string", "description": "ISO timestamp of review" },
+        "reviewedBy": { "type": "string", "description": "Admin UID of reviewer" },
+        "reviewerNotes": { "type": "string", "description": "Notes from reviewer" }
+      },
+      "required": ["leaveId", "workerId", "workerUid", "leaveType", "startDate", "endDate", "status", "submittedAt"]
+    },
+    "overtimeRecord": {
+      "title": "Overtime Record",
+      "description": "Recorded and approved extra hours on construction site.",
+      "type": "object",
+      "properties": {
+        "overtimeId": { "type": "string", "description": "Unique overtime log identifier" },
+        "workerId": { "type": "string", "description": "Worker ID (e.g. W-1001)" },
+        "workerUid": { "type": "string", "description": "Firebase Auth UID" },
+        "workerName": { "type": "string", "description": "Full name of worker" },
+        "siteId": { "type": "string", "description": "Site ID where overtime was served" },
+        "date": { "type": "string", "description": "Date of overtime (YYYY-MM-DD)" },
+        "hours": { "type": "number", "description": "Overtime duration in hours (positive number)" },
+        "hourlyRate": { "type": "number", "description": "Hourly rate for overtime" },
+        "multiplier": { "type": "number", "description": "Rate multiplier (default 1.5)" },
+        "calculatedAmount": { "type": "number", "description": "Total overtime compensation" },
+        "reason": { "type": "string", "description": "Operational task completed during overtime" },
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "REJECTED"] },
+        "submittedBy": { "type": "string", "description": "Worker or Admin submitter indicator" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of entry" }
+      },
+      "required": ["overtimeId", "workerId", "workerUid", "siteId", "date", "hours", "status", "createdAt"]
+    },
+    "salaryRecord": {
+      "title": "Salary Record",
+      "description": "Deterministic monthly or periodic wage slip calculation.",
+      "type": "object",
+      "properties": {
+        "salaryId": { "type": "string", "description": "Unique salary record ID (e.g. SAL-W1001-2026-09)" },
+        "workerId": { "type": "string", "description": "Worker ID" },
+        "workerUid": { "type": "string", "description": "Firebase Auth UID" },
+        "workerName": { "type": "string", "description": "Worker legal name" },
+        "jobRole": { "type": "string", "description": "Trade / specialization" },
+        "payPeriod": { "type": "string", "description": "Pay period identifier (YYYY-MM)" },
+        "startDate": { "type": "string", "description": "Period start date" },
+        "endDate": { "type": "string", "description": "Period end date" },
+        "dailyRate": { "type": "number", "description": "Daily wage rate" },
+        "daysAttended": { "type": "number", "description": "Verified attendance days" },
+        "baseEarnings": { "type": "number", "description": "daysAttended * dailyRate" },
+        "approvedOvertimeHours": { "type": "number", "description": "Sum of approved OT hours" },
+        "overtimeHourlyRate": { "type": "number", "description": "OT hourly rate" },
+        "overtimeEarnings": { "type": "number", "description": "Calculated OT pay" },
+        "allowances": { "type": "number", "description": "Site/food allowances" },
+        "deductions": { "type": "number", "description": "Total deductions" },
+        "netSalary": { "type": "number", "description": "baseEarnings + overtimeEarnings + allowances - deductions" },
+        "status": { "type": "string", "enum": ["DRAFT", "PROCESSED", "PAID"] },
+        "calculatedAt": { "type": "string", "description": "ISO timestamp of calculation" }
+      },
+      "required": ["salaryId", "workerId", "workerUid", "payPeriod", "netSalary", "status", "calculatedAt"]
+    },
+    "reportAuditLog": {
+      "title": "Report Audit Log",
+      "description": "Administrative report generation and export audit log.",
+      "type": "object",
+      "properties": {
+        "logId": { "type": "string", "description": "Unique log identifier" },
+        "reportType": { "type": "string", "description": "Type of report generated" },
+        "filtersUsed": { "type": "object", "description": "Query filters applied" },
+        "recordCount": { "type": "number", "description": "Number of records processed" },
+        "generatedBy": { "type": "string", "description": "Admin identifier or email" },
+        "generatedByRole": { "type": "string", "description": "Role of user generating report" },
+        "timestamp": { "type": "string", "description": "ISO timestamp of report generation" }
+      },
+      "required": ["reportType", "generatedBy", "timestamp"]
+    },
+    "securityEvent": {
+      "title": "Security Event",
+      "description": "Server-authoritative audit log of security events and suspicious activities.",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string", "description": "Unique security event identifier" },
+        "eventType": { "type": "string", "description": "Type of security event" },
+        "actorUid": { "type": "string", "description": "UID of acting user or anonymous" },
+        "actorRole": { "type": "string", "enum": ["ADMIN", "WORKER", "ANONYMOUS"], "description": "Role of the actor" },
+        "workerId": { "type": "string", "description": "Affected or involved worker ID" },
+        "siteId": { "type": "string", "description": "Affected or involved site ID" },
+        "timestamp": { "type": "string", "description": "Server-generated ISO timestamp" },
+        "result": { "type": "string", "enum": ["SUCCESS", "FAILURE"], "description": "Outcome of the action" },
+        "severity": { "type": "string", "enum": ["INFO", "WARNING", "HIGH", "CRITICAL"], "description": "Server-assigned severity" },
+        "source": { "type": "string", "description": "Source subsystem or API endpoint" },
+        "metadata": { "type": "object", "description": "Sanitized metadata without secrets" }
+      },
+      "required": ["eventId", "eventType", "actorUid", "actorRole", "timestamp", "result", "severity", "source"]
+    },
+    "deviceToken": {
+      "title": "Device Token",
+      "description": "Firebase Cloud Messaging token for worker push notifications.",
+      "type": "object",
+      "properties": {
+        "token": { "type": "string", "description": "FCM device registration token" },
+        "uid": { "type": "string", "description": "Associated Firebase Auth UID" },
+        "platform": { "type": "string", "enum": ["android", "web"], "description": "Client device platform" },
+        "createdAt": { "type": "string", "description": "ISO timestamp" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp" }
+      },
+      "required": ["token", "uid", "createdAt"]
+    },
+    "sitePhoto": {
+      "title": "Site Photo Metadata",
+      "description": "Metadata for construction site photos stored in Firebase Storage (1-5 per site).",
+      "type": "object",
+      "properties": {
+        "photoId": { "type": "string", "description": "Unique photo identifier" },
+        "siteId": { "type": "string", "description": "Associated construction site ID" },
+        "storagePath": { "type": "string", "description": "Firebase Storage reference path" },
+        "downloadUrl": { "type": "string", "description": "Authorized media retrieval URL" },
+        "fileName": { "type": "string", "description": "Original or sanitized safe filename" },
+        "contentType": { "type": "string", "enum": ["image/jpeg", "image/png", "image/webp"], "description": "MIME type" },
+        "fileSize": { "type": "number", "description": "File size in bytes (max 5MB)" },
+        "uploadedBy": { "type": "string", "description": "UID or email of administrator who uploaded" },
+        "uploadedAt": { "type": "string", "description": "ISO timestamp of upload" },
+        "displayOrder": { "type": "number", "description": "Sequential display order" }
+      },
+      "required": ["photoId", "siteId", "storagePath", "downloadUrl", "fileName", "contentType", "fileSize", "uploadedBy", "uploadedAt"]
+    },
+    "workerProfilePhoto": {
+      "title": "Worker Profile Photo Metadata",
+      "description": "Metadata for worker profile photo stored in Firebase Storage (max 1 per worker). Normal media only, no biometric/facial recognition.",
+      "type": "object",
+      "properties": {
+        "photoId": { "type": "string", "description": "Unique photo identifier" },
+        "workerId": { "type": "string", "description": "Associated worker ID" },
+        "storagePath": { "type": "string", "description": "Firebase Storage reference path" },
+        "downloadUrl": { "type": "string", "description": "Authorized media retrieval URL" },
+        "fileName": { "type": "string", "description": "Sanitized filename" },
+        "contentType": { "type": "string", "enum": ["image/jpeg", "image/png", "image/webp"], "description": "MIME type" },
+        "fileSize": { "type": "number", "description": "File size in bytes (max 5MB)" },
+        "uploadedBy": { "type": "string", "description": "UID of authorized uploader" },
+        "uploadedAt": { "type": "string", "description": "ISO timestamp of upload" }
+      },
+      "required": ["photoId", "workerId", "storagePath", "downloadUrl", "fileName", "contentType", "fileSize", "uploadedBy", "uploadedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "User accounts mapped to Firebase Auth UIDs."
+    },
+    "/workers/{workerId}": {
+      "schema": "worker",
+      "description": "Workforce profiles indexed by worker ID."
+    },
+    "/sites/{siteId}": {
+      "schema": "site",
+      "description": "Civil engineering and construction sites."
+    },
+    "/sites/{siteId}/photos/{photoId}": {
+      "schema": "sitePhoto",
+      "description": "Construction site photos subcollection (1-5 photos per site, Admin managed)."
+    },
+    "/batches/{batchId}": {
+      "schema": "batch",
+      "description": "Admin-controlled workforce cohorts."
+    },
+    "/counters/{counterId}": {
+      "description": "Atomic counters for sequential Worker ID (W-1001+) and Batch ID (B-01+) generation."
+    },
+    "/workerRegistrations/{regId}": {
+      "schema": "workerRegistration",
+      "description": "Worker applications awaiting administrator verification."
+    },
+    "/attendance/{attendanceId}": {
+      "description": "Authoritative check-in and check-out attendance records."
+    },
+    "/leaveRequests/{leaveId}": {
+      "schema": "leaveRequest",
+      "description": "Worker leave requests and supervisor approvals."
+    },
+    "/overtimeRecords/{overtimeId}": {
+      "schema": "overtimeRecord",
+      "description": "Worker overtime shift hours and approval records."
+    },
+    "/salaryRecords/{salaryId}": {
+      "schema": "salaryRecord",
+      "description": "Deterministic salary calculations, wage slips, and payment statuses."
+    },
+    "/reportAuditLogs/{logId}": {
+      "schema": "reportAuditLog",
+      "description": "Audit trail entries for administrative reports generation."
+    },
+    "/securityEvents/{eventId}": {
+      "schema": "securityEvent",
+      "description": "Server-authoritative audit log of security events and suspicious activities."
+    },
+    "/deviceTokens/{tokenId}": {
+      "schema": "deviceToken",
+      "description": "FCM device registration tokens for push notification delivery."
+    }
+  }
+}

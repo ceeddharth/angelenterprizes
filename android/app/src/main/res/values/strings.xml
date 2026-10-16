@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">ANGEL ENTERPRISES</string>
+    <string name="system_name">Civil Workforce Attendance System</string>
+    <string name="company_name">ANGEL ENTERPRISES</string>
+    <string name="welcome_subtitle">Construction Workforce Management</string>
+    <string name="admin_login">ADMIN LOGIN</string>
+    <string name="worker_login">WORKER LOGIN</string>
+    <string name="email_label">Email Address</string>
+    <string name="password_label">Password</string>
+    <string name="pin_label">PIN / Password</string>
+    <string name="worker_id_or_phone">Worker ID or Mobile Number</string>
+    <string name="first_time_register">First-Time Registration</string>
+    <string name="forgot_password">Forgot Password / PIN?</string>
+    <string name="login_btn">Sign In</string>
+    <string name="submit_registration">Submit Registration</string>
+    <string name="registration_submitted_title">Registration Submitted</string>
+    <string name="registration_submitted_msg">Your worker details are being verified by ANGEL ENTERPRISES site supervisors. You will be able to log in once your account is approved.</string>
+</resources>

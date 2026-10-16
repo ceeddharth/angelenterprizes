@@ -1,0 +1,6 @@
+{
+  "name": "Civil Workforce Attendance System",
+  "description": "System for managing civil workers and construction workforce at construction sites, built with Jetpack Compose, Material 3, MVVM, and Firebase Firestore.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

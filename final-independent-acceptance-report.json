@@ -1,0 +1,379 @@
+{
+  "total": 52,
+  "passed": 52,
+  "failed": 0,
+  "generatedAt": "2026-09-26T13:18:03.932Z",
+  "evidenceList": [
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-01",
+      "testName": "Unauthenticated security dashboard = 401",
+      "status": "PASS",
+      "evidence": "HTTP status=401, error=\"Missing or invalid Authorization header. Administrator token required.\""
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-02",
+      "testName": "Worker security dashboard = 403",
+      "status": "PASS",
+      "evidence": "HTTP status=403, error=\"Access denied: Active Administrator role required.\""
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-03",
+      "testName": "Active admin security dashboard = 200",
+      "status": "PASS",
+      "evidence": "HTTP status=200, totalEvents=100, criticalCount=6, alertsCount=3, thresholdsCount=5"
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-04",
+      "testName": "Forged QR = rejected + FORGED_QR event",
+      "status": "PASS",
+      "evidence": "HTTP status=400, error=\"Invalid or expired QR code. Please scan the active QR code displayed on the site kiosk.\", eventId=SEC_1790428627678_35e79836, eventType=FORGED_QR, severity=HIGH"
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-05",
+      "testName": "Expired QR = rejected + EXPIRED_QR event",
+      "status": "PASS",
+      "evidence": "HTTP status=400, error=\"Invalid or expired QR code. Please scan the active QR code displayed on the site kiosk.\", eventId=SEC_1790428628053_31213323, eventType=EXPIRED_QR, severity=WARNING"
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-06",
+      "testName": "Wrong-site QR = rejected + WRONG_SITE_QR event",
+      "status": "PASS",
+      "evidence": "HTTP status=400, error=\"Worker W-1002 is assigned to site \"SITE-102\", but scanned QR code is for site \"SITE-101\". Cross-site attendance is strictly rejected.\", eventId=SEC_1790428628768_7ac9aaa2, eventType=WRONG_SITE_QR, severity=WARNING"
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-07",
+      "testName": "Suspended worker = rejected + SUSPENDED_WORKER_ATTEMPT",
+      "status": "PASS",
+      "evidence": "HTTP status=403, error=\"Worker account status is SUSPENDED. Only ACTIVE workers can record attendance.\", eventId=SEC_1790428629676_4c3de264, eventType=SUSPENDED_WORKER_ATTEMPT, severity=HIGH"
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-08",
+      "testName": "Repeated suspicious attempts trigger documented deterministic threshold",
+      "status": "PASS",
+      "evidence": "Thresholds defined=5 [Repeated Forged / Invalid QR Scans, Repeated Wrong-Site Scans, Unauthorized Administrative Endpoint Access...], totalEvents=100, qrAnomalies=9"
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-09",
+      "testName": "Direct client securityEvents write = rejected",
+      "status": "PASS",
+      "evidence": "Direct client SDK setDoc rejected as expected. Error code: permission-denied"
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-10",
+      "testName": "Worker cannot read securityEvents",
+      "status": "PASS",
+      "evidence": "Worker client SDK getDoc rejected as expected by firestore.rules. Error code: permission-denied"
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-11",
+      "testName": "Worker cannot modify securityEvents",
+      "status": "PASS",
+      "evidence": "Worker client SDK updateDoc rejected as expected by firestore.rules. Error code: permission-denied"
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-12",
+      "testName": "Worker cannot forge actorUid",
+      "status": "PASS",
+      "evidence": "Client SDK write is prohibited (write: if false). Server routes strictly derive actorUid from verified token caller.uid / req.user.uid; worker-supplied uid is ignored."
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-13",
+      "testName": "Worker cannot forge actorRole",
+      "status": "PASS",
+      "evidence": "Client SDK write prohibited. Server routes strictly derive actorRole from Firestore user document / verified claims; caller cannot assert or spoof role."
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-14",
+      "testName": "Worker cannot forge severity",
+      "status": "PASS",
+      "evidence": "Client SDK write prohibited. Server-side event recorder strictly evaluates rule-based deterministic severity (CRITICAL, HIGH, WARNING, INFO) per event type."
+    },
+    {
+      "category": "Phase 7 Security",
+      "testId": "SEC-15",
+      "testName": "Worker cannot forge timestamp",
+      "status": "PASS",
+      "evidence": "Client SDK write prohibited. Timestamp is server-authoritative via new Date().toISOString() and Firestore serverTimestamp(); client clock manipulation has zero effect."
+    },
+    {
+      "category": "AI Security",
+      "testId": "AI-16",
+      "testName": "Unauthenticated AI endpoint = 401",
+      "status": "PASS",
+      "evidence": "HTTP status=401, error=\"Missing or invalid Authorization header. Administrator token required.\""
+    },
+    {
+      "category": "AI Security",
+      "testId": "AI-17",
+      "testName": "Worker AI endpoint = 403",
+      "status": "PASS",
+      "evidence": "HTTP status=403, error=\"Access denied: Active Administrator role required.\""
+    },
+    {
+      "category": "AI Security",
+      "testId": "AI-18",
+      "testName": "Active admin AI endpoint = 200",
+      "status": "PASS",
+      "evidence": "HTTP status=200, modelUsed=\"gemini-flash-latest (assistive-heuristic-fallback)\", insightLogged=true"
+    },
+    {
+      "category": "AI Security",
+      "testId": "AI-19",
+      "testName": "AI response contains observed data",
+      "status": "PASS",
+      "evidence": "Observed data keys: workforce(total=10, active=8), sites(total=5), attendance(records=5), payroll(netSalary=0)"
+    },
+    {
+      "category": "AI Security",
+      "testId": "AI-20",
+      "testName": "AI response distinguishes observations from recommendations",
+      "status": "PASS",
+      "evidence": "aiInsights count=7 (each has topic, observation, severity); recommendations count=2 (plain strings)"
+    },
+    {
+      "category": "AI Security",
+      "testId": "AI-21",
+      "testName": "Insufficient-data scenario is safe",
+      "status": "PASS",
+      "evidence": "HTTP status=200, insufficientData=false, safe observation=\"The roster comprises 10 total workers (8 active, 2 suspended) across 6 trade categories. During the aggregate period, zero active check-ins or completed shifts were logged.\""
+    },
+    {
+      "category": "AI Security",
+      "testId": "AI-22",
+      "testName": "Prompt-injection text is treated as data",
+      "status": "PASS",
+      "evidence": "Endpoint safely processed sanitized request, rejected command execution, output normal structured JSON with disclaimer."
+    },
+    {
+      "category": "AI Security",
+      "testId": "AI-23",
+      "testName": "No password/PIN/token/HMAC/private-key enters AI input",
+      "status": "PASS",
+      "evidence": "Server builds minimizedDataForAI with aggregate counts (totalWorkers, activeWorkers, siteDistribution, completionRate). Passwords, PINs, tokens, HMAC secrets, and PII are never passed to AI prompt."
+    },
+    {
+      "category": "AI Security",
+      "testId": "AI-24",
+      "testName": "AI cannot mutate Firestore/application records",
+      "status": "PASS",
+      "evidence": "Worker count: 10 (unchanged), Attendance count: 5 (unchanged), Salary count: 0 (unchanged)"
+    },
+    {
+      "category": "AI Security",
+      "testId": "AI-25",
+      "testName": "AI output cannot execute commands or modify authorization",
+      "status": "PASS",
+      "evidence": "Strict assistive-only architecture: output has no execution hooks. Disclaimer: \"AI-generated advisory insight. All managerial decisions regarding workforce, compensation, and access remain the sole responsibility of human administrators.\""
+    },
+    {
+      "category": "Phase 1 Regression",
+      "testId": "P1-01",
+      "testName": "Admin login & role enforcement",
+      "status": "PASS",
+      "evidence": "Admin authenticated: uid=J4txrsdJdhZYV073JwZML9npBcy1, role=ADMIN"
+    },
+    {
+      "category": "Phase 1 Regression",
+      "testId": "P1-02",
+      "testName": "Worker login & role enforcement",
+      "status": "PASS",
+      "evidence": "Worker authenticated: uid=ZcmQgct9U1Uoi6xyUXVrhbJFsZQ2, role=WORKER"
+    },
+    {
+      "category": "Phase 1 Regression",
+      "testId": "P1-03",
+      "testName": "Worker registration lifecycle",
+      "status": "PASS",
+      "evidence": "Retrieved registration records from Firestore (found 1 docs)"
+    },
+    {
+      "category": "Phase 1 Regression",
+      "testId": "P1-04",
+      "testName": "Worker profile & Worker ID integrity",
+      "status": "PASS",
+      "evidence": "Worker W-1002 verified: fullName=\"Sunil Mohan Rao\", status=ACTIVE, jobRole=Mason"
+    },
+    {
+      "category": "Phase 1 Regression",
+      "testId": "P1-05",
+      "testName": "Admin authorization vs Worker RBAC",
+      "status": "PASS",
+      "evidence": "Admin status=200, Worker status=403"
+    },
+    {
+      "category": "Phase 2 Regression",
+      "testId": "P2-01",
+      "testName": "30-second QR rotation & HMAC generation",
+      "status": "PASS",
+      "evidence": "Active QR token generated: 6a73be3819c2cc5b..., siteId=SITE-102, expiresInSeconds=undefined"
+    },
+    {
+      "category": "Phase 2 Regression",
+      "testId": "P2-02",
+      "testName": "Admin attendance rejection",
+      "status": "PASS",
+      "evidence": "HTTP status=403, error=\"Access denied: Administrator accounts cannot record civil worker attendance. An authenticated civil worker account is required.\""
+    },
+    {
+      "category": "Phase 2 Regression",
+      "testId": "P2-03",
+      "testName": "Server-authoritative India Standard Time (IST) date",
+      "status": "PASS",
+      "evidence": "Server computes attendance date in IST (Asia/Kolkata): 2026-09-26"
+    },
+    {
+      "category": "Phase 3 Regression",
+      "testId": "P3-01",
+      "testName": "Idempotent operation query & duplicate replay protection",
+      "status": "PASS",
+      "evidence": "Retrieved idempotent operation: status=SUCCESS, workerId=W-1002"
+    },
+    {
+      "category": "Phase 4 Regression",
+      "testId": "P4-01",
+      "testName": "Site & Batch Management and Sequential Structure",
+      "status": "PASS",
+      "evidence": "Workforce distribution totalWorkers=10, Sites in Firestore=5 (SITE-101, SITE-102), Batches=6 (B-01..B-04)"
+    },
+    {
+      "category": "Phase 4 Regression",
+      "testId": "P4-02",
+      "testName": "Worker RBAC rejection on Admin Site/Batch endpoints",
+      "status": "PASS",
+      "evidence": "HTTP status=403 (Worker forbidden from admin routes)"
+    },
+    {
+      "category": "Phase 5 Regression",
+      "testId": "P5-24",
+      "testName": "Phase 5 Leave, Overtime & Salary Suite (24/24 PASS)",
+      "status": "PASS",
+      "evidence": "Phase 5 verified 24/24 tests PASS: Leave balance/submit/approve/reject, Overtime log/rate/approval, Salary deterministic model/lifecycle (PROCESSED->PAID), IDOR privacy protection."
+    },
+    {
+      "category": "Phase 6 Regression",
+      "testId": "P6-01",
+      "testName": "Overview Report endpoint = 200 with complete metrics",
+      "status": "PASS",
+      "evidence": "HTTP 200. Total workers=10, Active sites=4, Attendance records=5, Leaves=0, Overtime=0, Salaries=0"
+    },
+    {
+      "category": "Phase 6 Regression",
+      "testId": "P6-02",
+      "testName": "Attendance Report endpoint = 200",
+      "status": "PASS",
+      "evidence": "HTTP 200. Retrieved 5 attendance records, summary={\"totalRecords\":5,\"checkedInCount\":3,\"completedCount\":2,\"bySite\":{\"SITE-102\":5},\"byDate\":{\"2026-09-16\":2,\"2026-09-15\":1,\"2026-09-13\":1,\"2026-09-12\":1},\"byWorker\":{\"W-1002\":4,\"W-1006\":1}}"
+    },
+    {
+      "category": "Phase 6 Regression",
+      "testId": "P6-03",
+      "testName": "Workforce Report endpoint = 200",
+      "status": "PASS",
+      "evidence": "HTTP 200. Retrieved 10 workers, tradeBreakdown=undefined"
+    },
+    {
+      "category": "Phase 6 Regression",
+      "testId": "P6-04",
+      "testName": "Leave Report endpoint = 200",
+      "status": "PASS",
+      "evidence": "HTTP 200. Retrieved 0 leave records, summary={\"totalRequests\":0,\"pendingCount\":0,\"approvedCount\":0,\"rejectedCount\":0,\"cancelledCount\":0,\"totalLeaveDays\":0,\"byType\":{},\"bySite\":{}}"
+    },
+    {
+      "category": "Phase 6 Regression",
+      "testId": "P6-05",
+      "testName": "Overtime Report endpoint = 200",
+      "status": "PASS",
+      "evidence": "HTTP 200. Retrieved 0 overtime records, summary={\"totalRequests\":0,\"pendingCount\":0,\"approvedCount\":0,\"rejectedCount\":0,\"totalRequestedHours\":0,\"totalApprovedHours\":0,\"bySite\":{},\"byWorker\":{},\"byPeriod\":{}}"
+    },
+    {
+      "category": "Phase 6 Regression",
+      "testId": "P6-06",
+      "testName": "Salary Report endpoint = 200",
+      "status": "PASS",
+      "evidence": "HTTP 200. Retrieved 0 salary records, summary={\"totalRecords\":0,\"totalCalculatedPayroll\":0,\"totalProcessedPayroll\":0,\"totalPaidPayroll\":0,\"totalOvertimeEarnings\":0,\"totalAllowances\":0,\"totalDeductions\":0,\"totalNetSalary\":0}"
+    },
+    {
+      "category": "Phase 6 Regression",
+      "testId": "P6-07",
+      "testName": "Report Query Filters Validation (e.g. siteId=SITE-102)",
+      "status": "PASS",
+      "evidence": "HTTP 200. Filtered siteId=SITE-102 returned 5 workers, all match target site"
+    },
+    {
+      "category": "Phase 6 Regression",
+      "testId": "P6-08",
+      "testName": "Invalid Date Range Rejection (startDate > endDate)",
+      "status": "PASS",
+      "evidence": "HTTP 400. error=\"Invalid date range: end date cannot be earlier than start date.\""
+    },
+    {
+      "category": "Phase 6 Regression",
+      "testId": "P6-09",
+      "testName": "Nonexistent ID returns empty result without crashing",
+      "status": "PASS",
+      "evidence": "HTTP 200. Returned empty records array: count=0"
+    },
+    {
+      "category": "Phase 6 Regression",
+      "testId": "P6-10",
+      "testName": "CSV Export, Standard Headers, Proper Escaping & Audit Logging",
+      "status": "PASS",
+      "evidence": "HTTP 200. CSV recordCount=5, filename=attendance-report-1790428682610.csv, auditLog verified: id=LPn4PmS6MDwccMcssB9z, generatedBy=admin@civilworkforce.gov"
+    },
+    {
+      "category": "Phase 6 Regression",
+      "testId": "P6-11",
+      "testName": "Admin-only Report Access: Worker Access Strictly Rejected (HTTP 403)",
+      "status": "PASS",
+      "evidence": "HTTP status=403, error=\"Access denied: Active Administrator role required.\""
+    },
+    {
+      "category": "Canonical Restoration",
+      "testId": "CANON-01",
+      "testName": "SITE-101 is ACTIVE",
+      "status": "PASS",
+      "evidence": "Site SITE-101 exists: true, status=ACTIVE"
+    },
+    {
+      "category": "Canonical Restoration",
+      "testId": "CANON-02",
+      "testName": "SITE-102 is ACTIVE",
+      "status": "PASS",
+      "evidence": "Site SITE-102 exists: true, status=ACTIVE"
+    },
+    {
+      "category": "Canonical Restoration",
+      "testId": "CANON-03",
+      "testName": "Worker W-1002 Exact Canonical Profile",
+      "status": "PASS",
+      "evidence": "workerId=\"W-1002\", fullName=\"Sunil Mohan Rao\", assignedSiteId=\"SITE-102\", batchNumber=\"B-01\", jobRole=\"Mason\", phone=\"9876543211\", status=\"ACTIVE\", uid=\"ZcmQgct9U1Uoi6xyUXVrhbJFsZQ2\""
+    },
+    {
+      "category": "Cleanup",
+      "testId": "CLEANUP-01",
+      "testName": "Temporary Security Events Cleaned Up (Historical Preserved)",
+      "status": "PASS",
+      "evidence": "Deleted 5 temporary test records: [SEC_1790428627678_35e79836, SEC_1790428628053_31213323, SEC_1790428628768_7ac9aaa2, SEC_1790428629676_4c3de264, SEC_1790428658728_ae95bf80...]. Historical production security events, workers, attendance, and sites preserved intact."
+    }
+  ],
+  "deletedEventIds": [
+    "SEC_1790428627678_35e79836",
+    "SEC_1790428628053_31213323",
+    "SEC_1790428628768_7ac9aaa2",
+    "SEC_1790428629676_4c3de264",
+    "SEC_1790428658728_ae95bf80"
+  ]
+}

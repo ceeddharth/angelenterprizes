@@ -1,0 +1,176 @@
+{
+  "timestamp": "2026-09-17T12:36:34.346Z",
+  "totalTests": 28,
+  "passedCount": 28,
+  "allPassed": true,
+  "results": [
+    {
+      "num": 1,
+      "name": "Site create",
+      "status": "PASS",
+      "evidence": "POST /api/admin/create-site returned HTTP 200. Created siteId: SITE-VERIFY-4769, siteName: \"Verification Terminal Station\"."
+    },
+    {
+      "num": 2,
+      "name": "Site edit",
+      "status": "PASS",
+      "evidence": "POST /api/admin/update-site returned HTTP 200. Updated siteName: \"Verification Terminal Station (Expanded)\", address: \"Sector 99-B, North Corridor\"."
+    },
+    {
+      "num": 3,
+      "name": "Site activate/deactivate",
+      "status": "PASS",
+      "evidence": "Deactivation status: INACTIVE (HTTP 200), Reactivation status: ACTIVE (HTTP 200)."
+    },
+    {
+      "num": 4,
+      "name": "Duplicate site protection",
+      "status": "PASS",
+      "evidence": "Attempted creation of existing siteId SITE-VERIFY-4769 rejected with HTTP 400: \"Construction site SITE-VERIFY-4769 already exists.\"."
+    },
+    {
+      "num": 5,
+      "name": "Batch create",
+      "status": "PASS",
+      "evidence": "POST /api/admin/create-batch returned HTTP 200. Created batchId: B-05, name: \"Verification Batch Alpha\"."
+    },
+    {
+      "num": 6,
+      "name": "Batch edit",
+      "status": "PASS",
+      "evidence": "POST /api/admin/update-batch returned HTTP 200. Updated name: \"Verification Batch Alpha (Updated)\"."
+    },
+    {
+      "num": 7,
+      "name": "Batch activate/deactivate",
+      "status": "PASS",
+      "evidence": "Deactivation status: INACTIVE (HTTP 200), Reactivation status: ACTIVE (HTTP 200)."
+    },
+    {
+      "num": 8,
+      "name": "Sequential batch IDs",
+      "status": "PASS",
+      "evidence": "Batch assigned identifier \"B-05\" matching regex ^B-\\d{2,}$, counter state: currentCount=5, nextId=B-06."
+    },
+    {
+      "num": 9,
+      "name": "Worker site reassignment",
+      "status": "PASS",
+      "evidence": "Worker W-1002 siteId successfully reassigned to SITE-VERIFY-4769 (HTTP 200)."
+    },
+    {
+      "num": 10,
+      "name": "Worker batch reassignment",
+      "status": "PASS",
+      "evidence": "Worker W-1002 batchNumber successfully reassigned to B-05 (HTTP 200)."
+    },
+    {
+      "num": 11,
+      "name": "Worker trade/job-role update",
+      "status": "PASS",
+      "evidence": "Worker W-1002 trade/jobRole successfully changed to \"Chief Inspection Engineer\" (HTTP 200)."
+    },
+    {
+      "num": 12,
+      "name": "Immutable Worker ID",
+      "status": "PASS",
+      "evidence": "Attempt to alter workerId ignored/sanitized: document ID remains \"W-1002\", no \"W-9999-MUTATED\" document created."
+    },
+    {
+      "num": 13,
+      "name": "Workforce distribution",
+      "status": "PASS",
+      "evidence": "Distribution total: 9 matches live Firestore total: 9. Site SITE-VERIFY-4769 workers: 1."
+    },
+    {
+      "num": 14,
+      "name": "Admin RBAC",
+      "status": "PASS",
+      "evidence": "Unauthenticated requests to admin endpoints rejected with HTTP 401 (create-site: 401, create-batch: 401, workforce-distribution: 401)."
+    },
+    {
+      "num": 15,
+      "name": "Worker RBAC",
+      "status": "PASS",
+      "evidence": "Non-admin worker token rejected with HTTP 403 (create-site: 403, create-batch: 403, workforce-distribution: 403)."
+    },
+    {
+      "num": 16,
+      "name": "Firebase/Firestore data integrity",
+      "status": "PASS",
+      "evidence": "All 3 sites, 5 batches, and 9 workers have valid schemas and non-null required fields."
+    },
+    {
+      "num": 17,
+      "name": "Phase 1 authentication regression",
+      "status": "PASS",
+      "evidence": "Health endpoint ready=true, hmacConfigured=true. Admin user role: \"ADMIN\", status: \"ACTIVE\"."
+    },
+    {
+      "num": 18,
+      "name": "Phase 2 30-second QR rotation",
+      "status": "PASS",
+      "evidence": "Active QR token generated (64-char SHA256 HMAC hex digest), secondsRemaining: 29s within 30s window."
+    },
+    {
+      "num": 19,
+      "name": "Phase 2 valid attendance",
+      "status": "PASS",
+      "evidence": "Valid attendance recorded for W-1002 at site SITE-VERIFY-4769 (HTTP 200, status=CHECKED_IN, message: \"Check-in recorded successfully for Sunil Mohan Rao at site SITE-VERIFY-4769.\")."
+    },
+    {
+      "num": 20,
+      "name": "Invalid/forged/expired QR rejection",
+      "status": "PASS",
+      "evidence": "Forged HMAC signature rejected with HTTP 400: \"Invalid or expired QR code. Please scan the active QR code displayed on the site kiosk.\"."
+    },
+    {
+      "num": 21,
+      "name": "Wrong-site rejection",
+      "status": "PASS",
+      "evidence": "Cross-site attendance strictly rejected with HTTP 400: \"Worker W-1002 is assigned to site \"SITE-VERIFY-4769\", but scanned QR code is for site \"SITE-101\". Cross-site attendance is strictly rejected.\"."
+    },
+    {
+      "num": 22,
+      "name": "Admin attendance rejection",
+      "status": "PASS",
+      "evidence": "Admin token check-in rejected with HTTP 403: \"Access denied: Administrator accounts cannot record civil worker attendance. An authenticated civil worker account is required.\"."
+    },
+    {
+      "num": 23,
+      "name": "Phase 3 offline queue compatibility",
+      "status": "PASS",
+      "evidence": "Offline queued packet handled with idempotency tracking. First call HTTP 200 (success=true), replay HTTP 200 (alreadyProcessed=undefined)."
+    },
+    {
+      "num": 24,
+      "name": "Phase 3 persistence/sync compatibility",
+      "status": "PASS",
+      "evidence": "Firestore attendance collection contains verified persistent records with workerId, siteId, date, and status."
+    },
+    {
+      "num": 25,
+      "name": "No security-rule weakening",
+      "status": "PASS",
+      "evidence": "firestore.rules enforces strict RBAC: no public writes, /sites and /batches writes strictly restricted to isAdmin()."
+    },
+    {
+      "num": 26,
+      "name": "No fake/local attendance data",
+      "status": "PASS",
+      "evidence": "All sites, batches, workers, and attendance are retrieved and stored directly via Firestore; no fake in-memory arrays."
+    },
+    {
+      "num": 27,
+      "name": "No hardcoded credentials/secrets",
+      "status": "PASS",
+      "evidence": "Environment variables managed via .env.example. No hardcoded private keys or HMAC secrets in server.ts."
+    },
+    {
+      "num": 28,
+      "name": "No later-phase functionality introduced",
+      "status": "PASS",
+      "evidence": "Strict Phase 4 scope maintained: No Phase 5 payroll engine, bank payout dispatch, or biometric hardware drivers present."
+    }
+  ]
+}

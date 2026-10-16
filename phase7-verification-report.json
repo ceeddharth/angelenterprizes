@@ -1,0 +1,79 @@
+{
+  "passed": 12,
+  "total": 12,
+  "results": [
+    {
+      "num": 1,
+      "name": "Unauthenticated request to /api/security/events returns 401",
+      "status": "PASS",
+      "evidence": "HTTP status=401, error=Missing or invalid Authorization header. Administrator token required."
+    },
+    {
+      "num": 2,
+      "name": "Worker request to /api/security/events returns 403 Forbidden",
+      "status": "PASS",
+      "evidence": "HTTP status=403, error=Access denied: Active Administrator role required."
+    },
+    {
+      "num": 3,
+      "name": "Admin request to /api/security/events returns 200 with complete SecurityDashboardData schema",
+      "status": "PASS",
+      "evidence": "HTTP status=200, totalEvents=100, recentEventsCount=100"
+    },
+    {
+      "num": 4,
+      "name": "Forged QR token submission returns 400 and creates immutable FORGED_QR security event",
+      "status": "PASS",
+      "evidence": "HTTP status=400, message=\"Invalid or expired QR code. Please scan the active QR code displayed on the site kiosk.\", eventId=SEC_1790514793829_c9552dc1, severity=HIGH"
+    },
+    {
+      "num": 5,
+      "name": "Suspended worker check-in attempt is rejected and logs SUSPENDED_WORKER_ATTEMPT",
+      "status": "PASS",
+      "evidence": "HTTP status=403, message=\"Worker account status is SUSPENDED. Only ACTIVE workers can record attendance.\", eventId=SEC_1790514794847_cf79ccdc, workerId=W-1002"
+    },
+    {
+      "num": 6,
+      "name": "Wrong site QR token submission is rejected and logs WRONG_SITE_QR with severity WARNING/HIGH",
+      "status": "PASS",
+      "evidence": "HTTP status=400, message=\"Worker W-1002 is assigned to site \"SITE-101\", but scanned QR code is for site \"SITE-102\". Cross-site attendance is strictly rejected.\", eventId=SEC_1790514795952_92abcefb"
+    },
+    {
+      "num": 7,
+      "name": "Security dashboard aggregates events and evaluates deterministic threshold rules",
+      "status": "PASS",
+      "evidence": "totalEvents=100, criticalCount=6, qrAnomalies=8, activeAlertsCount=5"
+    },
+    {
+      "num": 8,
+      "name": "Direct client-side write to securityEvents is rejected by Firestore security rules",
+      "status": "PASS",
+      "evidence": "Write rejected as expected: 7 PERMISSION_DENIED: Missing or insufficient permissions."
+    },
+    {
+      "num": 9,
+      "name": "Unauthenticated request to /api/ai/management-insights returns 401",
+      "status": "PASS",
+      "evidence": "HTTP status=401, error=Missing or invalid Authorization header. Administrator token required."
+    },
+    {
+      "num": 10,
+      "name": "Worker request to /api/ai/management-insights returns 403 Forbidden",
+      "status": "PASS",
+      "evidence": "HTTP status=403, error=Access denied: Active Administrator role required."
+    },
+    {
+      "num": 11,
+      "name": "Admin request to /api/ai/management-insights returns structured response with observed data and assistive insights",
+      "status": "PASS",
+      "evidence": "HTTP status=200, workforce=10, attendanceRecords=5, insightsCount=7, recsCount=2"
+    },
+    {
+      "num": 12,
+      "name": "Strict Assistive-Only Directive: AI never mutates workers, attendance, or salary records",
+      "status": "PASS",
+      "evidence": "workersCount=10, attendanceCount=5, salaryCount=0 (all unchanged)"
+    }
+  ],
+  "generatedAt": "2026-09-27T13:13:34.071Z"
+}
